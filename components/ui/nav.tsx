@@ -9,7 +9,7 @@ import { GoChevronRight } from 'react-icons/go'
 import { IoIosSearch } from 'react-icons/io'
 import Container from './container'
 import { HamburgerButton } from './hamburger'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import React from 'react'
 
 export default function NavMenu() {
@@ -27,26 +27,27 @@ export default function NavMenu() {
         when: 'beforeChildren',
       },
     }),
+
     close: {
-      opacity: 0,
       height: 0,
+      opacity: 0,
       transition: {
         duration: 0.2,
         staggerChildren: 0.02,
         staggerDirection: -1,
-        when: 'beforeChildren',
+        when: 'afterChildren',
       },
     },
   }
 
   const showHamburgerMenuVariant = {
-    open: {
-      opacity: 1,
+    open: (opacity: number) => ({
+      opacity: opacity || 1,
       y: 10,
       transition: {
         y: { stiffness: 1000, velocity: -100 },
       },
-    },
+    }),
     close: {
       opacity: 0,
       y: 0,
@@ -56,24 +57,16 @@ export default function NavMenu() {
     },
   }
 
-  const dropDownMenuVariant = {
-    open: (height: string) => ({
+  const blurVariant = {
+    show: {
+      height: '100vh',
       opacity: 1,
-      height: height,
-      transition: {
-        duration: 0.2,
-        staggerChildren: 0.02,
-        when: 'beforeChildren',
-      },
-    }),
-    close: {
+    },
+    hide: {
       opacity: 0,
-      height: 0,
+      height: '0',
       transition: {
-        duration: 0.2,
-        staggerChildren: 0.02,
-        staggerDirection: -1,
-        when: 'beforeChildren',
+        delay: 0.5,
       },
     },
   }
@@ -95,6 +88,9 @@ export default function NavMenu() {
           <nav>
             <ul className="mx-auto flex max-w-none items-center justify-between gap-6 py-3 lg:max-w-4xl lg:justify-start lg:gap-10 xl:gap-10">
               <li
+                onMouseOver={() => {
+                  setIsMenuHover(false)
+                }}
                 className={`cursor-pointer text-xs ${
                   isMenuOpen ? 'opacity-0' : 'delay-300'
                 }`}
@@ -115,6 +111,9 @@ export default function NavMenu() {
               ))}
               <div className="flex items-center justify-center gap-6 lg:gap-10 xl:gap-10">
                 <li
+                  onMouseOver={() => {
+                    setIsMenuHover(false)
+                  }}
                   className={`cursor-pointer opacity-80 ${
                     isMenuOpen ? 'opacity-0' : 'delay-300'
                   }`}
@@ -122,6 +121,9 @@ export default function NavMenu() {
                   <IoIosSearch className="mt-1 h-5 w-5" />
                 </li>
                 <li
+                  onMouseOver={() => {
+                    setIsMenuHover(false)
+                  }}
                   className={`cursor-pointer opacity-80 ${
                     isMenuOpen ? 'opacity-0' : 'delay-300'
                   }`}
@@ -153,10 +155,11 @@ export default function NavMenu() {
         {menuItems.map((item, index) => (
           <motion.li
             variants={showHamburgerMenuVariant}
+            custom={0.7}
             key={index}
             className="group flex cursor-pointer list-none justify-between text-3xl tracking-wider"
           >
-            <span> {item.name}</span>
+            <span>{item.name}</span>
             <GoChevronRight className="opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-80" />
           </motion.li>
         ))}
@@ -167,22 +170,24 @@ export default function NavMenu() {
         variants={hamburgerMenuVariant}
         animate={isMenuHover ? 'open' : 'close'}
         custom={'auto'}
-        className={`${
-          isMenuHover ? ' bg-black' : ''
-        } fixed z-40 hidden w-full flex-col gap-4 pt-16 lg:flex`}
+        className={`fixed z-40 hidden w-full flex-col gap-4 bg-background pt-16 shadow lg:flex`}
       >
-        <div className="container mx-auto flex max-w-none justify-start gap-20 px-4 pb-20 lg:max-w-4xl lg:px-0">
+        <div className="container mx-auto flex h-full max-w-none justify-start gap-20 px-4 pb-16 lg:max-w-4xl lg:px-0">
           {hoverItem &&
             hoverItem.children?.map((menu, index) => (
-              <ul key={index} className="flex list-none flex-col gap-4">
-                <span className="text-xs tracking-wider opacity-50">
+              <motion.ul key={index} className="flex list-none flex-col">
+                <motion.span
+                  variants={showHamburgerMenuVariant}
+                  custom={0.5}
+                  className="m-0 p-0 pb-2 text-xs tracking-wider opacity-50"
+                >
                   {menu.name}
-                </span>
+                </motion.span>
                 {menu.items.map((item, index) => (
                   <motion.li
                     variants={showHamburgerMenuVariant}
                     key={index}
-                    className={`cursor-pointer ${
+                    className={`cursor-pointer pb-3 ${
                       item.important
                         ? 'text-2xl font-bold tracking-wider'
                         : 'text-xs font-bold tracking-wider'
@@ -191,16 +196,17 @@ export default function NavMenu() {
                     {item.name}
                   </motion.li>
                 ))}
-              </ul>
+              </motion.ul>
             ))}
         </div>
       </motion.div>
-      <div
+      <motion.div
+        initial="hide"
+        variants={blurVariant}
+        animate={isMenuHover ? 'show' : 'hide'}
         onMouseOver={() => setIsMenuHover(false)}
-        className={`fixed hidden h-full w-full lg:block ${
-          isMenuHover ? 'backdrop-blur-lg' : ''
-        }`}
-      ></div>
+        className={`fixed hidden h-full w-full backdrop-blur-xl lg:block`}
+      ></motion.div>
     </div>
   )
 }
