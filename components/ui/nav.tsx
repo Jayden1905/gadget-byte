@@ -56,6 +56,28 @@ export default function NavMenu() {
     },
   }
 
+  const dropDownMenuVariant = {
+    open: (height: string) => ({
+      opacity: 1,
+      height: height,
+      transition: {
+        duration: 0.2,
+        staggerChildren: 0.02,
+        when: 'beforeChildren',
+      },
+    }),
+    close: {
+      opacity: 0,
+      height: 0,
+      transition: {
+        duration: 0.2,
+        staggerChildren: 0.02,
+        staggerDirection: -1,
+        when: 'beforeChildren',
+      },
+    },
+  }
+
   useEffect(() => {
     if (isMenuHover) {
       document.body.style.overflow = 'hidden'
