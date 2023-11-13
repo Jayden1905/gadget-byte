@@ -370,3 +370,11 @@ export const menuItems: MenuItemType[] = [
     ],
   },
 ]
+
+export const quickLinks = [
+  { name: 'Holiday Gifts', pathname: '#' },
+  { name: 'Find a Store', pathname: '#' },
+  { name: 'Accessories', pathname: '#' },
+  { name: 'Gift Cards', pathname: '#' },
+  { name: 'Apple Trade In', pathname: '#' },
+]

@@ -1,21 +1,25 @@
 'use client'
 
 import { hamburgetAtom, menuHoverAtom, menuHoverItemAtom } from '@/lib/store'
-import { menuItems } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { menuItems, quickLinks } from '@/lib/utils'
+import { motion, useAnimate } from 'framer-motion'
 import { useAtom } from 'jotai'
+import { useEffect, useRef, useState } from 'react'
 import { BsBag } from 'react-icons/bs'
 import { GoChevronRight } from 'react-icons/go'
 import { IoIosSearch } from 'react-icons/io'
+import { HiArrowLongRight } from 'react-icons/hi2'
 import Container from './container'
 import { HamburgerButton } from './hamburger'
-import { useEffect, useRef, useState } from 'react'
-import React from 'react'
 
 export default function NavMenu() {
   const [isMenuOpen, setIsMenuOpen] = useAtom(hamburgetAtom)
   const [isMenuHover, setIsMenuHover] = useAtom(menuHoverAtom)
   const [hoverItem, setHoverItem] = useAtom(menuHoverItemAtom)
+  const [search, setSearch] = useState<boolean>(false)
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const blurRef = useRef<HTMLDivElement>(null)
 
   const hamburgerMenuVariant = {
     open: (height: string) => ({
@@ -25,6 +29,7 @@ export default function NavMenu() {
         duration: 0.2,
         staggerChildren: 0.02,
         when: 'beforeChildren',
+        ease: 'easeInOut',
       },
     }),
 
@@ -36,6 +41,7 @@ export default function NavMenu() {
         staggerChildren: 0.02,
         staggerDirection: -1,
         when: 'afterChildren',
+        ease: 'easeInOut',
       },
     },
   }
@@ -57,18 +63,33 @@ export default function NavMenu() {
     },
   }
 
-  const blurVariant = {
-    show: {
-      height: '100vh',
-      opacity: 1,
-    },
-    hide: {
-      opacity: 0,
-      height: '0',
+  const showDropdownMenuVariant = {
+    open: (opacity: number) => ({
+      opacity: opacity || 1,
       transition: {
-        delay: 0.5,
+        duration: 0.2,
+        ease: 'easeInOut',
+      },
+    }),
+    close: {
+      opacity: 0,
+      transition: {
+        duration: 0.2,
+        ease: 'easeInOut',
       },
     },
+  }
+
+  const openBlur = () => {
+    const element = blurRef.current
+    element?.classList.remove('opacity-0')
+    element?.classList.remove('hidden')
+  }
+
+  const closeBlur = () => {
+    const element = blurRef.current
+    element?.classList.add('opacity-0')
+    element?.classList.add('hidden')
   }
 
   useEffect(() => {
@@ -76,6 +97,17 @@ export default function NavMenu() {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'auto'
+    }
+
+    const element = blurRef.current
+    if (isMenuHover) {
+      element?.classList.remove('opacity-0')
+      element?.classList.remove('hidden')
+    } else {
+      setTimeout(() => {
+        element?.classList.add('opacity-0')
+        element?.classList.add('hidden')
+      }, 500)
     }
   }, [isMenuHover])
 
@@ -103,8 +135,12 @@ export default function NavMenu() {
                   onMouseOver={() => {
                     setIsMenuHover(true)
                     setHoverItem(item)
+                    if (search) {
+                      setSearch(false)
+                      closeBlur()
+                    }
                   }}
-                  className="hidden cursor-pointer text-xs tracking-wider opacity-80 lg:block"
+                  className="hidden cursor-pointer text-xs tracking-wider lg:block"
                 >
                   {item.name}
                 </li>
@@ -117,6 +153,16 @@ export default function NavMenu() {
                   className={`cursor-pointer opacity-80 ${
                     isMenuOpen ? 'opacity-0' : 'delay-300'
                   }`}
+                  onClick={() => {
+                    setHoverItem(null)
+                    if (search) {
+                      setSearch(false)
+                      closeBlur()
+                    } else {
+                      setSearch(true)
+                      openBlur()
+                    }
+                  }}
                 >
                   <IoIosSearch className="mt-1 h-5 w-5" />
                 </li>
@@ -145,6 +191,7 @@ export default function NavMenu() {
           </nav>
         </Container>
       </div>
+
       <motion.div
         initial="close"
         variants={hamburgerMenuVariant}
@@ -168,16 +215,16 @@ export default function NavMenu() {
       <motion.div
         initial="close"
         variants={hamburgerMenuVariant}
-        animate={isMenuHover ? 'open' : 'close'}
+        animate={isMenuHover || search ? 'open' : 'close'}
         custom={'auto'}
         className={`fixed z-40 hidden w-full flex-col gap-4 bg-background pt-16 shadow lg:flex`}
       >
         <div className="container mx-auto flex h-full max-w-none justify-start gap-20 px-4 pb-16 lg:max-w-4xl lg:px-0">
           {hoverItem &&
             hoverItem.children?.map((menu, index) => (
-              <motion.ul key={index} className="flex list-none flex-col">
+              <ul key={index} className="flex list-none flex-col">
                 <motion.span
-                  variants={showHamburgerMenuVariant}
+                  variants={showDropdownMenuVariant}
                   custom={0.5}
                   className="m-0 p-0 pb-2 text-xs tracking-wider opacity-50"
                 >
@@ -185,8 +232,8 @@ export default function NavMenu() {
                 </motion.span>
                 {menu.items.map((item, index) => (
                   <motion.li
-                    variants={showHamburgerMenuVariant}
                     key={index}
+                    variants={showDropdownMenuVariant}
                     className={`cursor-pointer pb-3 ${
                       item.important
                         ? 'text-2xl font-bold tracking-wider'
@@ -196,17 +243,58 @@ export default function NavMenu() {
                     {item.name}
                   </motion.li>
                 ))}
-              </motion.ul>
+              </ul>
             ))}
+          {search && (
+            <div className="flex w-full flex-col gap-4">
+              <motion.div
+                variants={showDropdownMenuVariant}
+                className="mb-4 flex w-full items-center justify-center gap-2"
+              >
+                <IoIosSearch className="h-7 w-7 opacity-30" />
+                <input
+                  type="text"
+                  placeholder="Search gadgetbyte.com"
+                  className="w-full border-none bg-transparent text-2xl tracking-wider outline-none"
+                  autoFocus
+                  ref={inputRef}
+                ></input>
+              </motion.div>
+              <ul className="flex flex-col gap-3">
+                <motion.li
+                  variants={showDropdownMenuVariant}
+                  className="text-sm font-light tracking-wider opacity-60"
+                >
+                  Quick Links
+                </motion.li>
+                {quickLinks.map((link, index) => (
+                  <motion.li
+                    variants={showDropdownMenuVariant}
+                    key={index}
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    <HiArrowLongRight className="opacity-60" />
+                    <p className="text-sm font-light tracking-wider">
+                      {link.name}
+                    </p>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </motion.div>
-      <motion.div
-        initial="hide"
-        variants={blurVariant}
-        animate={isMenuHover ? 'show' : 'hide'}
-        onMouseOver={() => setIsMenuHover(false)}
-        className={`fixed hidden h-full w-full backdrop-blur-xl lg:block`}
-      ></motion.div>
+      <div
+        onMouseOver={() => {
+          setIsMenuHover(false)
+          if (search) {
+            setSearch(false)
+            closeBlur()
+          }
+        }}
+        ref={blurRef}
+        className={`fixed hidden h-full w-full backdrop-blur-xl transition-all duration-500 ease-in-out`}
+      ></div>
     </div>
   )
 }
