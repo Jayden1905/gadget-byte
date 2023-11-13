@@ -1,5 +1,5 @@
 import { atom } from 'jotai'
-import { MenuItemType } from './utils'
+import { MenuItemType } from './menu'
 
 export const countAtom = atom(0)
 

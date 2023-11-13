@@ -1,7 +1,7 @@
 'use client'
 
 import { hamburgetAtom, menuHoverAtom, menuHoverItemAtom } from '@/lib/store'
-import { menuItems, quickLinks } from '@/lib/utils'
+import { menuItems, quickLinks } from '@/lib/menu'
 import { motion, useAnimate } from 'framer-motion'
 import { useAtom } from 'jotai'
 import { useEffect, useRef, useState } from 'react'
