@@ -88,8 +88,10 @@ export default function NavMenu() {
 
   const closeBlur = () => {
     const element = blurRef.current
-    element?.classList.add('opacity-0')
-    element?.classList.add('hidden')
+    setTimeout(() => {
+      element?.classList.add('opacity-0')
+      element?.classList.add('hidden')
+    }, 250)
   }
 
   useEffect(() => {
@@ -99,17 +101,12 @@ export default function NavMenu() {
       document.body.style.overflow = 'auto'
     }
 
-    const element = blurRef.current
-    if (isMenuHover) {
-      element?.classList.remove('opacity-0')
-      element?.classList.remove('hidden')
+    if (isMenuHover || search) {
+      openBlur()
     } else {
-      setTimeout(() => {
-        element?.classList.add('opacity-0')
-        element?.classList.add('hidden')
-      }, 500)
+      closeBlur()
     }
-  }, [isMenuHover])
+  }, [isMenuHover, search])
 
   return (
     <div>
@@ -135,10 +132,7 @@ export default function NavMenu() {
                   onMouseOver={() => {
                     setIsMenuHover(true)
                     setHoverItem(item)
-                    if (search) {
-                      setSearch(false)
-                      closeBlur()
-                    }
+                    setSearch(false)
                   }}
                   className="hidden cursor-pointer text-xs tracking-wider lg:block"
                 >
@@ -155,13 +149,7 @@ export default function NavMenu() {
                   }`}
                   onClick={() => {
                     setHoverItem(null)
-                    if (search) {
-                      setSearch(false)
-                      closeBlur()
-                    } else {
-                      setSearch(true)
-                      openBlur()
-                    }
+                    setSearch(!search)
                   }}
                 >
                   <IoIosSearch className="mt-1 h-5 w-5" />
@@ -222,18 +210,17 @@ export default function NavMenu() {
         <div className="container mx-auto flex h-full max-w-none justify-start gap-20 px-4 pb-16 lg:max-w-4xl lg:px-0">
           {hoverItem &&
             hoverItem.children?.map((menu, index) => (
-              <ul key={index} className="flex list-none flex-col">
-                <motion.span
-                  variants={showDropdownMenuVariant}
-                  custom={0.5}
-                  className="m-0 p-0 pb-2 text-xs tracking-wider opacity-50"
-                >
+              <motion.ul
+                variants={showDropdownMenuVariant}
+                key={index}
+                className="flex list-none flex-col"
+              >
+                <span className="m-0 p-0 pb-5 text-xs tracking-wider opacity-50">
                   {menu.name}
-                </motion.span>
+                </span>
                 {menu.items.map((item, index) => (
-                  <motion.li
+                  <li
                     key={index}
-                    variants={showDropdownMenuVariant}
                     className={`cursor-pointer pb-3 ${
                       item.important
                         ? 'text-2xl font-bold tracking-wider'
@@ -241,14 +228,15 @@ export default function NavMenu() {
                     }`}
                   >
                     {item.name}
-                  </motion.li>
+                  </li>
                 ))}
-              </ul>
+              </motion.ul>
             ))}
-          {search && (
+          {!hoverItem && (
             <div className="flex w-full flex-col gap-4">
               <motion.div
                 variants={showDropdownMenuVariant}
+                custom={1}
                 className="mb-4 flex w-full items-center justify-center gap-2"
               >
                 <IoIosSearch className="h-7 w-7 opacity-30" />
@@ -263,6 +251,7 @@ export default function NavMenu() {
               <ul className="flex flex-col gap-3">
                 <motion.li
                   variants={showDropdownMenuVariant}
+                  custom={1}
                   className="text-sm font-light tracking-wider opacity-60"
                 >
                   Quick Links
@@ -270,6 +259,7 @@ export default function NavMenu() {
                 {quickLinks.map((link, index) => (
                   <motion.li
                     variants={showDropdownMenuVariant}
+                    custom={1}
                     key={index}
                     className="flex cursor-pointer items-center gap-2"
                   >
@@ -287,10 +277,7 @@ export default function NavMenu() {
       <div
         onMouseOver={() => {
           setIsMenuHover(false)
-          if (search) {
-            setSearch(false)
-            closeBlur()
-          }
+          setSearch(false)
         }}
         ref={blurRef}
         className={`fixed hidden h-full w-full backdrop-blur-xl transition-all duration-500 ease-in-out`}
